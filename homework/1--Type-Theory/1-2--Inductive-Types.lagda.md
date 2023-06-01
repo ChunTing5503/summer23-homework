@@ -64,7 +64,10 @@ and `y` are `true`.
 ```
 _and_ : Bool → Bool → Bool
 -- Exercise:
-x and y = {!!}
+true and true = true
+true and false = false
+false and true = false
+false and false = true 
 ```
 
 You don't have to split on all variables at once. Give a definition of
@@ -72,7 +75,8 @@ the logical "or" by case splitting only on the variable `x`:
 ```
 _or_ : Bool → Bool → Bool
 -- Exercise:
-x or y = {!!}
+true or y = true
+false or y = y
 ```
 
 Here is the definition of logical implication. There is a strange
@@ -142,7 +146,7 @@ be the image of the single element `tt : ⊤`).
 We can go even further, however. We can define a data type `∅` with no
 constructors. This is called the "empty type":
 ```
-data ∅ : Type₀ where
+data ∅ : Type₀ where 
 ```
 
 The recursion principle of the empty type is a version of the "ex
@@ -190,7 +194,23 @@ zero    + m = m
 
 _·_ : ℕ → ℕ → ℕ
 -- Exercise:
-n · m = {!!}
+zero · x = zero
+(suc n) · m = n · m + m
+```
+
+Define exponential
+```
+exp : ℕ → ℕ → ℕ
+exp a zero = suc zero
+exp a (suc b) = (exp a b) · a 
+```
+
+Define max
+```
+max : ℕ → ℕ → ℕ
+max zero m = m
+max m zero = m
+max (suc n) (suc m) = max n m 
 ```
 
 We can also define a "predecessor" operation, which partially undoes the successor suc : ℕ → ℕ. Of course, it can't fully undo it, since 0 has nowhere to go but to itself.
@@ -223,14 +243,16 @@ We can define the length of a list by recursion
 ```
 length : {A : Type} → List A → ℕ
 -- Exercise:
-length L = {!!}
+length [] = zero
+length (x :: L1) = suc (length L1)
 ```
 
 A natural number can be seen as a list of tally marks.
 ```
 ℕ→List⊤ : ℕ → List ⊤
 -- Exercise:
-ℕ→List⊤ n = {!!}
+ℕ→List⊤ zero = []
+ℕ→List⊤ (suc n) = tt :: (ℕ→List⊤ n)
 ```
 
 Together with `length : List ⊤ → ℕ`, we have a bijection between the
@@ -269,11 +291,13 @@ maps to that effect:
 ```
 Bool→⊤⊎⊤ : Bool → ⊤ ⊎ ⊤
 -- Exercise:
-Bool→⊤⊎⊤ b = {!!}
+Bool→⊤⊎⊤ true = inl tt
+Bool→⊤⊎⊤ false = inr tt
 
 ⊤⊎⊤→Bool : ⊤ ⊎ ⊤ → Bool
 -- Exercise:
-⊤⊎⊤→Bool c = {!!}
+⊤⊎⊤→Bool (inl tt) = true
+⊤⊎⊤→Bool (inr tt) = false
 ```
 
 Clearly, if you turned a `Bool` into an element of `⊤ ⊎ ⊤` and then
@@ -287,11 +311,11 @@ to equivalence, but again we can't yet fully express that.
 ```
 ∅⊎-to : ∀ {ℓ} (A : Type ℓ) → ∅ ⊎ A → A
 -- Exercise:
-∅⊎-to A x = {!!}
+∅⊎-to A (inr a) = a
 
 ∅⊎-fro : ∀ {ℓ} (A : Type ℓ) → A → ∅ ⊎ A
 -- Exercise:
-∅⊎-fro A a = {!!}
+∅⊎-fro A a = inr a
 ```
 
 Now we can describe the integers. An integer is either a natural
@@ -309,12 +333,13 @@ then negated):
 ```
 ℤ→ℕ⊎ℕ : ℤ → ℕ ⊎ ℕ
 -- Exercise:
-ℤ→ℕ⊎ℕ z = {!!}
-
+ℤ→ℕ⊎ℕ (pos n) = inl n
+ℤ→ℕ⊎ℕ (negsuc n) = inr n
 
 ℕ⊎ℕ→ℤ : ℕ ⊎ ℕ → ℤ
 -- Exercise:
-ℕ⊎ℕ→ℤ z = {!!}
+ℕ⊎ℕ→ℤ (inl n) = pos n
+ℕ⊎ℕ→ℤ (inr n) = negsuc n
 ```
 
 We can define the various arithmetic operations of the
@@ -331,11 +356,15 @@ Now we can define the successor of integers which sends `z` to `z +
 ```
 sucℤ : ℤ → ℤ
 -- Exercise:
-sucℤ z = {!!}
+sucℤ (pos n) = pos (suc n)
+sucℤ (negsuc zero) = pos zero
+sucℤ (negsuc (suc n)) = negsuc n
 
 predℤ : ℤ → ℤ
 -- Exercise:
-predℤ z = {!!}
+predℤ (pos zero) = negsuc zero
+predℤ (pos (suc n)) = pos n
+predℤ (negsuc n) = negsuc (suc n)
 ```
 
 Now we turn our attention to defining addition of integers. Since the
@@ -346,11 +375,13 @@ these cases out.
 ```
 _+pos_ : ℤ → ℕ → ℤ
 -- Exercise:
-z +pos n = {!!}
+z +pos zero = z
+z +pos (suc n) = (sucℤ z) +pos n
 
 _+negsuc_ : ℤ → ℕ → ℤ
 -- Exercise:
-z +negsuc n = {!!}
+z +negsuc zero = predℤ z
+z +negsuc (suc n) = (predℤ z) +negsuc n
 
 _+ℤ_ : ℤ → ℤ → ℤ
 m +ℤ pos n = m +pos n
@@ -363,7 +394,8 @@ terms of addition and negation.
 ```
 -_ : ℤ → ℤ
 -- Exercise:
-- z = {!!}
+- pos n = sucℤ (negsuc n)
+- negsuc n = sucℤ (pos n)
 
 _-_ : ℤ → ℤ → ℤ
 m - n = m +ℤ (- n)
@@ -374,7 +406,11 @@ of integers.
 ```
 _·ℤ_ : ℤ → ℤ → ℤ
 -- Exercise:
-n ·ℤ m = {!!}
+(pos n) ·ℤ (pos m) = pos (n · m)
+(pos n) ·ℤ (negsuc m) = negsuc (n · (suc m)) - (negsuc zero)
+(negsuc n) ·ℤ (pos m) = negsuc ((suc n) · m) +ℤ (negsuc zero)
+(negsuc n) ·ℤ (negsuc m) = pos ((suc n) · (suc m))
+
 ```
 
 # Extra:
