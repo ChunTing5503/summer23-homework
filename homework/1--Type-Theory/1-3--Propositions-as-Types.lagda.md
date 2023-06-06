@@ -412,9 +412,7 @@ equality.
   → m1 ≡ℕ m2
   → (n1 + m1) ≡ℕ (n2 + m2)
 -- Exercise:
-+-≡ℕ zero zero zero zero p q = tt
-+-≡ℕ zero zero (suc m1) (suc m2) p q = +-≡ℕ zero zero m1 m2 p q
-+-≡ℕ (suc n1) (suc n2) zero zero p q = +-≡ℕ n1 n2 zero zero p q
++-≡ℕ zero zero m1 m2 p q = q
 +-≡ℕ (suc n1) (suc n2) m1 m2 p q = +-≡ℕ n1 n2 m1 m2 p q
 ```
 

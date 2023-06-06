@@ -34,7 +34,8 @@ fold start acc (x :: L) = acc x (fold start acc L)
 -- Use fold to write a function that sums a list of numbers
 -- sumℕ [1, 2, 3, 4] should be 10
 sumℕ : List ℕ → ℕ
-sumℕ = {!!}
+sumℕ [] = 0
+sumℕ (x :: L) = x + (sumℕ L)
 
 -- To test that you did it right, try normalizing the following test
 -- To normalize, use C-c C-n, then type in test-sum.
@@ -42,10 +43,12 @@ sumℕ = {!!}
 test-sum : ℕ
 test-sum = sumℕ (1 :: 2 :: 3 :: 4 :: [])
 
+
 -- Now dow a product
 -- prodℕ [1, 2, 3, 4] should be 24
 prodℕ : List ℕ → ℕ
-prodℕ = {!!}
+prodℕ [] = suc zero
+prodℕ (x :: L) = x · (prodℕ L)
 
 test-prod : ℕ
 test-prod = prodℕ (1 :: 2 :: 3 :: 4 :: [])
@@ -55,7 +58,8 @@ test-prod = prodℕ (1 :: 2 :: 3 :: 4 :: [])
 -- Write a function which filters a list according to a proposition:
 -- filter isEven [1, 2, 3, 4, 5, 6] should be [2, 4, 6]
 filter : {A : Type} → (A → Bool) → List A → List A
-filter p L = {!!}
+filter p [] = []
+filter p (x :: L) = if (p x) then (x :: (filter p L)) else (filter p L)
 
 filter-test : List ℕ
 filter-test = filter isEven (1 :: 2 :: 3 :: 4 :: 5 :: 6 :: [])
@@ -66,7 +70,8 @@ filter-test = filter isEven (1 :: 2 :: 3 :: 4 :: 5 :: 6 :: [])
 -- Write a function which reverses a list
 -- reverse [1, 2, 3, 4] should be [4, 3, 2, 1]
 reverse : {A : Type} → List A → List A
-reverse L = {!!}
+reverse [] = []
+reverse (x :: L) = (reverse L) ++ (x :: [])
 
 reverse-test : List ℕ
 reverse-test = reverse (1 :: 2 :: 3 :: 4 :: [])
@@ -76,7 +81,8 @@ reverse-test = reverse (1 :: 2 :: 3 :: 4 :: [])
 -- Write a fuction which applies a function to each element in a list
 -- map suc [1,2,3,4] should be [2, 3, 4, 5]
 map : {A B : Type} → (A → B) → List A → List B
-map f L = {!!}
+map f [] = []
+map f (x :: L) = (f x) :: (map f L)
 
 map-test : List ℕ
 map-test = map suc (1 :: 2 :: 3 :: 4 :: [])
@@ -91,8 +97,11 @@ map-test = map suc (1 :: 2 :: 3 :: 4 :: [])
                         -- If you're curious about why agda is whining,
                         -- Ask me sometime
                         -- (or look into well founded recursion).
+
 sort : {A : Type} (_leq_ : A → A → Bool) → List A → List A
-sort _leq_ L = {!!}
+sort _leq_ [] = []
+sort _leg_ (x :: []) = x :: []
+sort _leq_ (x :: L) = (sort _leq_ (filter (_leq x) L)) ++ (x :: []) ++ (sort _leq_ (filter (x leq_) L))
 
 _≤_ : ℕ → ℕ → Bool
 zero ≤ m = true
