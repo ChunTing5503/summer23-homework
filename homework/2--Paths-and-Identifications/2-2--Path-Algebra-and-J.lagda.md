@@ -59,11 +59,14 @@ principle for paths:
 -- and press `C-c C-n`. (`C-n` for "normalise").
 {-
 _ : I
-_ = {! ~ i0!}
+_ = {! ~ i0! }
 -}
 
 sym : x ≡ y → y ≡ x
 sym p i = p (~ i)
+
+sym' : x ≡ y → y ≡ x
+sym' {x = x} p = subst (λ z → z ≡ x) p refl
 ```
 
 Now, there's a fairly evident question we can ask: what happens if we
@@ -167,13 +170,13 @@ module _ {A : Type ℓ} {B : A → Type ℓ'}
   where
 
   -- Exercise:
-  ΣPathP' : Σ[ p ∈ (fst x ≡ fst y) ] PathP {!!} {!!} {!!}
+  ΣPathP' : Σ[ p ∈ (fst x ≡ fst y) ] PathP (λ i → B (p i)) (snd x) (snd y)
           → x ≡ y
   ΣPathP' eq i = fst eq i , snd eq i
 
   -- Exercise:
   PathPΣ' : x ≡ y
-          → Σ[ p ∈ (fst x ≡ fst y) ] PathP {!!} {!!} {!!}
+          → Σ[ p ∈ (fst x ≡ fst y) ] PathP (λ i → B (p i)) (snd x) (snd y)
   PathPΣ' eq = (λ i → fst (eq i)) , (λ i → snd (eq i))
 
 ```
@@ -188,13 +191,13 @@ module _ {A : I → Type ℓ} {B : (i : I) → A i → Type ℓ'}
   where
 
   -- Exercise:
-  ΣPathP : Σ[ p ∈ PathP {!!} {!!} {!!} ] PathP {!!} {!!} {!!}
+  ΣPathP : Σ[ p ∈ PathP A (fst x) (fst y)] PathP (λ i → B i (p i)) (snd x) (snd y)
          → PathP (λ i → Σ (A i) (B i)) x y
   ΣPathP eq i = fst eq i , snd eq i
 
   -- Exercise:
   PathPΣ : PathP (λ i → Σ (A i) (B i)) x y
-         → Σ[ p ∈ PathP {!!} {!!} {!!} ] PathP {!!} {!!} {!!}
+         → Σ[ p ∈ PathP A (fst x) (fst y) ] PathP (λ i → B i (p i)) (snd x) (snd y)
   PathPΣ eq = (λ i → fst (eq i)) , (λ i → snd (eq i))
 ```
 
@@ -206,8 +209,8 @@ identical but the type improves:
 -- Exercise:
 depFunExt : {B : A → I → Type}
   {f : (x : A) → B x i0} {g : (x : A) → B x i1}
-  → ((x : A) → PathP {!!} {!!} {!!})
-  → PathP {!!} f g
+  → ((x : A) → PathP (λ i → B x i) (f x) (g x))
+  → PathP (λ i → (x : A) → B x i) f g
 depFunExt p i x = p x i
 ```
 
@@ -225,6 +228,18 @@ Square : {A : Type ℓ} {a00 a01 a10 a11 : A}
        → Type ℓ
 Square a0- a1- a-0 a-1 = PathP (a-0≡a-1 a-0 a-1) a0- a1-
 ```
+
+```
+reflSquare1 : {A : Type ℓ} {a0 a1 : A} → (p : a0 ≡ a1) → Square refl refl p p 
+reflSquare1 p = λ i j → (p i)
+-- reflSquare1 p = λ i → refl
+
+reflSquare2 : {A : Type ℓ} {a0 a1 : A} → (p : a0 ≡ a1) → Square p p refl refl
+reflSquare2 p = λ i j → (p j)
+-- reflSquare2 p = refl
+```
+
+
 Here's the picture again:
 
              a-1
@@ -252,13 +267,13 @@ definitionally.
 -- Uncomment this block and try normalising the following expressions.
 {-
 _ : I
-_ = {! i0 ∨ i0!}
+_ = {! i0 ∨ i0! }
 _ : I
-_ = {! i0 ∨ i1!}
+_ = {! i0 ∨ i1! }
 _ : I
-_ = {! i0 ∧ i0!}
+_ = {! i0 ∧ i0! }
 _ : I
-_ = {! i0 ∧ i1!}
+_ = {! i0 ∧ i1! }
 -}
 ```
 
@@ -326,29 +341,29 @@ Below we have drawn some more squares. Write them down in Cubical Agda
 below.
 
            p⁻¹
-       x - - - > x
+       y - - - > x
        ^         ^
      p |         | refl            ^
        |         |               j |
-       x — — — > y                 ∙ — >
+       x — — — > x                 ∙ — >
           refl                       i
 
 ```
 connectionEx1 : (p : x ≡ y) → Square p refl refl (sym p)
 -- Exercise
-connectionEx1 p i j = {!!}
+connectionEx1 p i j = p ((~ i) ∧ j) 
 ```
             p
-        y - - - > y
+        x - - - > y
         ^         ^
     p⁻¹ |         | refl            ^
         |         |               j |
-        y — — — > x                 ∙ — >
+        y — — — > y                 ∙ — >
            refl                       i
 ```
 connectionEx2 : (p : x ≡ y) → Square (sym p) refl refl p
 -- Exercise
-connectionEx2 p i j = {!!}
+connectionEx2 p i j = p (i ∨ (~ j))
 ```
 
 Our definition of ℤ is a little janky and off kilter --- we treat the
@@ -370,22 +385,32 @@ isomorphic to the ones we had before.
 ```
 ℤ'→ℤ : ℤ' → ℤ
 -- Exercise
-ℤ'→ℤ z = {!!}
+ℤ'→ℤ (pos' x) = pos x
+ℤ'→ℤ (neg' zero) = pos zero
+ℤ'→ℤ (neg' (suc x)) = negsuc x
+ℤ'→ℤ (poszero≡negzero i) = pos zero
 
 ℤ→ℤ' : ℤ → ℤ'
 -- Exercise
-ℤ→ℤ' z = {!!}
+ℤ→ℤ' (pos n) = pos' n
+ℤ→ℤ' (negsuc n) = neg' (suc n)
+
 
 ℤIsoℤ' : Iso ℤ ℤ'
 -- Exercise
 ℤIsoℤ' = iso ℤ→ℤ' ℤ'→ℤ s r
   where
     s : section ℤ→ℤ' ℤ'→ℤ
-    s z = {!!}
+    s (pos' x) = refl
+    s (neg' zero) = poszero≡negzero
+    s (neg' (suc x)) = refl
+    s (poszero≡negzero i) j = poszero≡negzero (i ∧ j)
 
     r : retract ℤ→ℤ' ℤ'→ℤ
-    r z = {!!}
+    r (pos n) = refl
+    r (negsuc n) = refl
 ```
+
 
 
 ## The J Rule.
@@ -395,9 +420,9 @@ fundamental but not so well known principle of identity: Martin Löf's
 J rule.
 
 ```
-J : (P : ∀ y → x ≡ y → Type ℓ) (r : P x refl)
-    (p : x ≡ y) → P y p
-J P r p = transport (λ i → P (p i) (λ j → p (i ∧ j))) r
+J : (motive : ∀ y → x ≡ y → Type ℓ) (base-case : motive x refl)
+    (p : x ≡ y) → motive y p
+J motive base-case p = transport (λ i → motive (p i) (λ j → p (i ∧ j))) base-case
 ```
 
 If we think of the dependent type `P` as a property, then the J rule
@@ -426,6 +451,9 @@ a path and not a definitional equality.
 transportRefl : (x : A) → transport refl x ≡ x
 transportRefl {A = A} x i = transp (λ _ → A) i x
 
+substRefl : (P : A → Type ℓ) {x : A} (y : P x) → subst P refl y ≡ y
+substRefl P y = transportRefl y
+
 JRefl : (P : ∀ y → x ≡ y → Type ℓ) (r : P x refl)
       → J P r refl ≡ r
 JRefl P r = transportRefl r
@@ -445,17 +473,24 @@ iff→Iso p s r = iso (fst p) (snd p) s r
 ≡Iso≡Bool a b = iff→Iso (≡iff≡Bool a b) (s a b) (r a b)
   where
     s : (x y : Bool) → section (fst (≡iff≡Bool x y)) (snd (≡iff≡Bool x y))
-    s p = {!!}
-
+    s true true tt = refl
+    s false false tt = refl
+    
     r : (x y : Bool) → retract (fst (≡iff≡Bool x y)) (snd (≡iff≡Bool x y))
-    r true y p =  J motive refl p
+    r true y p =  J motive base-case p
       where
         motive : ∀ z q → Type
-        motive z q = {!!}
-    r false y p = J motive refl p
+        motive z q = snd (≡iff≡Bool true z) (fst (≡iff≡Bool true z) q) ≡ q
+
+        base-case : motive true refl
+        base-case = refl
+    r false y p = J motive base-case p
       where
         motive : ∀ z q → Type
-        motive z q = {!!}
+        motive z q = snd (≡iff≡Bool false z) (fst (≡iff≡Bool false z) q) ≡ q
+
+        base-case : motive false refl
+        base-case = refl
 ```
 
 We similarly promote `≡iff≡ℕ` to an isomorphism, but it will be easier
@@ -481,8 +516,7 @@ codeℕ : ℕ → ℕ → Type
 codeℕ n m = n ≡ℕ m
 
 codeℕRefl : (n : ℕ) → codeℕ n n
-codeℕRefl zero = tt
-codeℕRefl (suc n) = codeℕRefl n
+codeℕRefl = ≡ℕ-refl
 
 encodeℕ : (n m : ℕ) → n ≡ m → codeℕ n m
 encodeℕ n m p = subst (λ z → codeℕ n z) p (codeℕRefl n)
@@ -496,7 +530,8 @@ then it should be easy to map out of it.
 ```
 -- Exercise:
 decodeℕ : (n m : ℕ) → codeℕ n m → n ≡ m
-decodeℕ n m c = {!!}
+decodeℕ zero zero c = refl
+decodeℕ (suc n) (suc m) c = cong suc (decodeℕ n m c)
 ```
 
 Then we prove that `encode` and `decode` form an isomorphism. This
@@ -514,10 +549,18 @@ case.
 ≡Iso≡ℕ n m = iso (encodeℕ n m) (decodeℕ n m) (s n m) (r n m)
   where
     s : (x y : ℕ) → section (encodeℕ x y) (decodeℕ x y)
-    s x y p = {!!}
+    s zero zero tt = refl
+    s (suc x) (suc y) p = s x y p
 
     r : (x y : ℕ) → retract (encodeℕ x y) (decodeℕ x y)
-    r x y p = {!!}
+    r x y p = J motive base-case p
+     where
+      motive : {x : ℕ} (y : ℕ) (p : x ≡ y) → Type
+      motive {x} y p = decodeℕ x y (encodeℕ x y p) ≡ p
+
+      base-case : {x : ℕ} → motive x refl
+      base-case {zero} = refl
+      base-case {suc x} i = cong suc (base-case i)
 ```
 
 Let's do the encode-decode method again, but for coproducts.
@@ -528,23 +571,29 @@ Let's do the encode-decode method again, but for coproducts.
 ≡Iso≡⊎ {A = A} {B = B} x y = iso (encode x y) (decode x y) (s x y) (r x y)
   where
     codeRefl : (c : A ⊎ B) → c ≡⊎ c
-    codeRefl c = {!!}
+    codeRefl (inl c) = refl
+    codeRefl (inr c) = refl
 
     encode : (x y : A ⊎ B) → x ≡ y → x ≡⊎ y
-    encode x y p = {!!}
+    encode x y p = subst (λ z → x ≡⊎ z) p (codeRefl x)
 
     encodeRefl : (c : A ⊎ B)  → encode c c refl ≡ codeRefl c
-    encodeRefl c = {!!}
+    encodeRefl c = substRefl (c ≡⊎_) (codeRefl c)
 
     decode : (x y : A ⊎ B) → x ≡⊎ y → x ≡ y
-    decode x y p = {!!}
+    decode (inl a) (inl b) p = cong inl p
+    decode (inr a) (inr b) p = cong inr p
 
     decodeRefl : (c : A ⊎ B) → decode c c (codeRefl c) ≡ refl
-    decodeRefl c p = {!!}
+    decodeRefl (inl a) = refl
+    decodeRefl (inr b) = refl
 
     s : (x y : A ⊎ B) → section (encode x y) (decode x y)
-    s x y = {!!}
+    s (inl a) (inl a') = J (λ a' p → encode (inl a) (inl a') (cong inl p) ≡ p) (encodeRefl (inl a))
+    s (inr b) (inr b') = J (λ b' p → encode (inr b) (inr b') (cong inr p) ≡ p) (encodeRefl (inr b))
 
     r : (x y : A ⊎ B) → retract (encode x y) (decode x y)
-    r x y = {!!}
+    r x y = J (λ y p → decode x y (encode x y p) ≡ p) ((trans ( cong (decode x x) (encodeRefl x))) (decodeRefl x))
 ```
+
+-- Practice for integers ℤ

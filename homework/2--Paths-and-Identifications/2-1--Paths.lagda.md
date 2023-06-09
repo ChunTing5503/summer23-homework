@@ -536,6 +536,7 @@ the same thing as the equalities we define in 1-3!
     fro false false = λ _ → refl
 ```
 
+
 You might be wondering whether we could promote the two maps `to` and
 `fro` above into an isomorphism between `a ≡ b` and `a ≡Bool b`. We
 can, but we will need some theory developed in the next lecture. If
@@ -550,12 +551,48 @@ We can do the same for the other equalities we covered in 1-3.
 ≡iff≡ℕ a b = (to a b) , (fro a b)
   where
     to : (x y : ℕ) → (x ≡ y) → (x ≡ℕ y)
-    to zero zero = λ _ → tt
-    to x y = {!   !}
+    to zero zero p = tt
+    to zero (suc n) p = subst (λ z → z ≡ℕ zero) p tt
+    to (suc n) zero p = subst (λ z → z ≡ℕ (suc n)) p (≡ℕ-refl n)
+    to (suc n) (suc m) p = to n m (cong predℕ p)
+
+    to' : (x y : ℕ) → (x ≡ y) → (x ≡ℕ y)
+    to' x y p = subst (λ z → x ≡ℕ z) p (≡ℕ-refl x)
 
     fro : (x y : ℕ) → (x ≡ℕ y) → (x ≡ y)
-    fro x y = {!!}
+    fro zero zero p = refl
+    fro (suc x) (suc y) p = cong suc (fro x y p)
 ```
+
+-- Practice for ≡iff≡ℤ
+```
+_≡ℤ_ : (n m : ℤ) → Type
+(pos n) ≡ℤ (pos m) = n ≡ℕ m
+(pos n) ≡ℤ (negsuc m) = ∅
+(negsuc n) ≡ℤ (pos m) = ∅
+(negsuc n) ≡ℤ (negsuc m) = n ≡ℕ m
+
+
+≡ℤ-refl : (x : ℤ) → x ≡ℤ x
+≡ℤ-refl (pos zero) = tt
+≡ℤ-refl (negsuc zero) = tt
+≡ℤ-refl (pos (suc n)) = ≡ℤ-refl (pos n)
+≡ℤ-refl (negsuc (suc n)) = ≡ℤ-refl (negsuc n)
+
+
+≡iff≡ℤ : (a b : ℤ) → (a ≡ b) iffP (a ≡ℤ b)
+≡iff≡ℤ a b = (to a b) , (fro a b)
+  where
+    to : (x y : ℤ) → (x ≡ y) → (x ≡ℤ y)
+    to x y p = subst (λ z → x ≡ℤ z) p (≡ℤ-refl x)
+
+    fro : (x y : ℤ) → (x ≡ℤ y) → (x ≡ y)
+    fro (pos n) (pos m) p = cong pos (≡iff≡ℕ n m .snd p)
+    fro (negsuc n) (negsuc m) p = cong negsuc (≡iff≡ℕ n m .snd p)
+```
+
+
+
 
 Now that we have a notion of sameness - paths - valid in all types, we
 can resolve our conundrum concerning equalities in disjoint unions: we
@@ -583,11 +620,15 @@ refl⊎ (inr b) = refl
     unl _ (inl a) = a
     unl default (inr _) = default
 
+    unr : (default : B) (x : A ⊎ B) → B
+    unr _ (inr b) = b
+    unr default (inl _) = default
+
     to : (x y : A ⊎ B) → (x ≡ y) → (x ≡⊎ y)
     to (inl x) (inl y) p = cong (unl x) p
     to (inl x) (inr y) p = subst (λ z → (inl x) ≡⊎ z) p refl
     to (inr x) (inl y) p = subst ((inr x) ≡⊎_) p refl
-    to (inr x) (inr y) p = {!   !}
+    to (inr x) (inr y) p = cong (unr y) p
 
     to' : (x y : A ⊎ B) → (x ≡ y) → (x ≡⊎ y)
     to' x y p = subst (λ z → x ≡⊎ z) p (refl⊎ x)
